@@ -1,30 +1,29 @@
-#   simple-blobs.py
-#   Defines a network that can find separate data from two blobs of data from 
-#   different classes
+#   deep_circles.py
+#   Defines a network that can find separate circles of data
 #
 
 #   Imports
-from sklearn.datasets import make_blobs
+from sklearn.datasets import make_circles
 import numpy as np
 import matplotlib.pyplot as plt
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
 
-# Helper functions
+#Include Graphviz
+#os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
+#os.environ["PATH"] += os.pathsep + 'C:/anaconda3/Library/bin/graphviz'
+
+#   Helper functions
 
 #   plot the data on a figure
 def plot_data(pl, X, y):
-    #plot the first class
     # plot class where y==0
     pl.plot(X[y==0, 0], X[y==0,1], 'ob', alpha=0.5)
-    
-    #plot the second class
     # plot class where y==1
     pl.plot(X[y==1, 0], X[y==1,1], 'xr', alpha=0.5)
-
     pl.legend(['0', '1'])
     return pl
-    
+
 #   Common function that draws the decision boundaries
 def plot_decision_boundary(model, X, y):
 
@@ -48,16 +47,13 @@ def plot_decision_boundary(model, X, y):
 
     return plt
 
-
-#Generate sampe data. (x,y) coordinates mapped to 2 classes (0 & 1)
+# Generate test data - Note : the classes are now 2 concentric circles (so not linearly seperable)
 # Generate some data blobs.  Data will be either 0 or 1 when 2 is number of centers.
 # X is a [number of samples, 2] sized array. X[sample] contains its x,y position of the sample in the space
 # ex: X[1] = [1.342, -2.3], X[2] = [-4.342, 2.12]
 # y is a [number of samples] sized array. y[sample] contains the class index (ie. 0 or 1 when there are 2 centers)
 # ex: y[1] = 0 , y[1] = 1
-X, y = make_blobs(n_samples=1000, centers=2, random_state=42)
-
-#Plot the classes
+X, y = make_circles(n_samples=1000, factor=.6, noise=0.1, random_state=42)
 pl = plot_data(plt, X, y)
 pl.show()
 
@@ -68,27 +64,38 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_
 # Create the keras model
 from keras.models import Sequential
 from keras.layers import Dense
-from keras.optimizers import Adam #Used for back propagation
-
+from keras.optimizers import Adam
 
 #   Simple Sequential model
 model = Sequential()
+model.add(Dense(4, input_shape=(2,), activation="tanh", name="Hidden-1")) #first layer must have the input shape
+model.add(Dense(4, activation="tanh", name="Hidden-2"))
 #   Add a Dense Fully Connected Layer with 1 neuron.  Using input_shape = (2,) says the input will 
 #       be arrays of the form (*,2).  The first dimension will be an unspecified 
 #       number of batches (rows) of data.  The second dimension is 2 which are the X, Y positions of each data element.
 #       The sigmoid activation function is used to return 0 or 1, signifying the data 
 #       cluster the position is predicted to belong to.
-model.add(Dense(1, input_shape=(2,), activation="sigmoid"))
-
-# Compile the model.  Minimize crossentropy for a binary.  Maximize for accuracy
-# Adam optimizer to minimize the error
-# lr = learning rate for adjusting the weights
+model.add(Dense(1, activation="sigmoid", name="output_layer"))
+#Show layers 
+model.summary()
+#   Compile the model.  Minimize crossentopy for a binary.  Maximize for accuracy
 model.compile(Adam(lr=0.05), 'binary_crossentropy', metrics=['accuracy'])
 
+#Use Keras plot_model to plot to file
+from keras.utils import plot_model
+#This doesn't seem to work
+#plot_model(model, to_file="model.png", show_shapes=True, show_layer_names=True)
+
+#   Define early stopping callback
+from keras.callbacks import EarlyStopping
+#stops the training when the accuracy does not change any more
+# --> not all epochs will be executed
+my_callbacks = [EarlyStopping(monitor='val_acc', patience=5, mode='max')]
+
 #   Fit the model with the data from make_blobs.  Make 100 cycles through the data.
-# epochs = 100 --> 100 runs through the training data
 #       Set verbose to 0 to supress progress messages 
-model.fit(X_train, y_train, epochs=100, verbose=1)
+# check error progress against validation data
+model.fit(X_train, y_train, epochs=100, verbose=1, callbacks=my_callbacks, validation_data=(X_test, y_test))
 
 #   Get loss and accuracy on test data
 eval_result = model.evaluate(X_test, y_test)
