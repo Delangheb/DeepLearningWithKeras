@@ -50,7 +50,7 @@ x_test /= 255
 #print('x_test shape:', x_test.shape)
 
 #print(y_train[:4])
-# convert class vectors to binary class matrices.  One-hot encoding
+# convert class vectors to binary class matrices.  One-hot encoding --> 10 classes --> 3 = 0*0 0*1 0*2 1*3 0*4 
 #  3 => 0 0 0 1 0 0 0 0 0 0 and 1 => 0 1 0 0 0 0 0 0 0 0 
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
@@ -59,16 +59,17 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 # Define the model
 model = Sequential()
 # V1
-# model.add(Conv2D(32, kernel_size=(3, 3),
+#32 filters of size 3 *3
+#model.add(Conv2D(32, kernel_size=(3, 3),
 #                  activation='relu',
 #                  input_shape=input_shape))
-# model.add(MaxPooling2D(pool_size=(2, 2)))
-# model.add(Conv2D(32, (3, 3), activation='relu'))
-# model.add(MaxPooling2D(pool_size=(2, 2)))
-# model.add(Flatten())
-# model.add(Dense(128, activation='relu'))
-# model.add(Dropout(0.5))
-# model.add(Dense(num_classes, activation='softmax'))
+#model.add(MaxPooling2D(pool_size=(2, 2)))
+#model.add(Conv2D(32, (3, 3), activation='relu'))
+#model.add(MaxPooling2D(pool_size=(2, 2)))
+#model.add(Flatten())
+#model.add(Dense(128, activation='relu'))
+#model.add(Dropout(0.5))
+#model.add(Dense(num_classes, activation='softmax'))
 
 # V2
 # model.add(Conv2D(32, kernel_size=(3, 3),
